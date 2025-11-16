@@ -9,8 +9,13 @@ from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.chat_history import InMemoryChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
-# Set your API key
-os.environ["GOOGLE_API_KEY"] = "AIzaSyCqgzWqxuF3XFsnSOrYROaeBsZgQm0aPiU"
+# Load API key from environment variable
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+
+if not GOOGLE_API_KEY:
+    print("ERROR: GOOGLE_API_KEY environment variable not set!")
+    print("Set it with: $env:GOOGLE_API_KEY='your_api_key_here'")
+    exit()
 
 # Initialize Gemini model
 llm = ChatGoogleGenerativeAI(
