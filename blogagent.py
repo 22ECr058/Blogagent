@@ -10,9 +10,6 @@ from langchain_core.output_parsers import StrOutputParser
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 MEDIUM_API_KEY = os.getenv("MEDIUM_API_KEY", "")
 DEVTO_API_KEY = os.getenv("DEVTO_API_KEY", "")
-WORDPRESS_URL = os.getenv("WORDPRESS_URL", "")
-WORDPRESS_USER = os.getenv("WORDPRESS_USER", "")
-WORDPRESS_APP_PASSWORD = os.getenv("WORDPRESS_APP_PASSWORD", "")
 
 if not GOOGLE_API_KEY:
     print("ERROR: GOOGLE_API_KEY environment variable not set!")
@@ -111,41 +108,6 @@ def publish_to_devto(title: str, content: str) -> bool:
         print(f"  ❌ Dev.to failed: {e}")
     return False
 
-def publish_to_wordpress(title: str, content: str) -> bool:
-    """Publish blog post to WordPress (requires 'markdown' package)"""
-    if not WORDPRESS_URL or not WORDPRESS_USER or not WORDPRESS_APP_PASSWORD:
-        return False
-    
-    try:
-        # Note: Install markdown package first: pip install markdown
-        try:
-            import markdown
-            html_content = markdown.markdown(content)
-        except ImportError:
-            print("  ⚠️  WordPress publishing requires 'markdown' package")
-            print("     Run: pip install markdown")
-            return False
-        
-        post_data = {
-            "title": title,
-            "content": html_content,
-            "status": "draft"  # Change to "publish" for immediate publish
-        }
-        
-        resp = requests.post(
-            f"{WORDPRESS_URL}/wp-json/wp/v2/posts",
-            auth=(WORDPRESS_USER, WORDPRESS_APP_PASSWORD),
-            json=post_data
-        )
-        
-        if resp.status_code == 201:
-            url = resp.json()["link"]
-            print(f"  ✅ WordPress: {url}")
-            return True
-    except Exception as e:
-        print(f"  ❌ WordPress failed: {e}")
-    return False
-
 def extract_title(content: str) -> str:
     """Extract title from markdown content"""
     lines = content.strip().split('\n')
@@ -196,10 +158,6 @@ def run():
         if DEVTO_API_KEY:
             if publish_to_devto(title, content):
                 published.append("Dev.to")
-        
-        if WORDPRESS_URL and WORDPRESS_USER and WORDPRESS_APP_PASSWORD:
-            if publish_to_wordpress(title, content):
-                published.append("WordPress")
         
         if not published:
             print("\n⚠️  No publishing platforms configured!")
