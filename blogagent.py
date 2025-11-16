@@ -1,4 +1,4 @@
-# blogagent.py - NO .env - DIRECT KEY - 100% WORKING NOV 13, 2025
+# blogagent.py - Blog Agent with Environment Variables
 import os
 import requests
 from datetime import datetime
@@ -6,18 +6,17 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
-# PASTE YOUR REAL GEMINI KEY HERE
-GOOGLE_API_KEY = "AIzaSyCqgzWqxuF3XFsnSOrYROaeBsZgQm0aPiU"  
+# Load API keys from environment variables
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+MEDIUM_API_KEY = os.getenv("MEDIUM_API_KEY", "")
+DEVTO_API_KEY = os.getenv("DEVTO_API_KEY", "")
+WORDPRESS_URL = os.getenv("WORDPRESS_URL", "")
+WORDPRESS_USER = os.getenv("WORDPRESS_USER", "")
+WORDPRESS_APP_PASSWORD = os.getenv("WORDPRESS_APP_PASSWORD", "")
 
-# OPTIONAL: Publishing API keys (leave blank to skip auto-publish)
-MEDIUM_API_KEY = ""  # Get from: https://medium.com/me/settings/security
-DEVTO_API_KEY = ""   # Get from: https://dev.to/settings/extensions
-WORDPRESS_URL = ""   # Your WordPress site URL
-WORDPRESS_USER = ""
-WORDPRESS_APP_PASSWORD = ""  # Generate from WordPress.com settings
-
-if not GOOGLE_API_KEY or "your_real_key" in GOOGLE_API_KEY:
-    print("ERROR: Paste your real API key above!")
+if not GOOGLE_API_KEY:
+    print("ERROR: GOOGLE_API_KEY environment variable not set!")
+    print("Set it with: $env:GOOGLE_API_KEY='your_api_key_here'")
     exit()
 
 print("Gemini API Key LOADED SUCCESSFULLY!")
