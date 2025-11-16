@@ -1,4 +1,4 @@
-# blogagent.py - Blog Agent with Environment Variables
+# blogagent.py - NO .env - DIRECT KEY - 100% WORKING NOV 13, 2025
 import os
 import requests
 from datetime import datetime
@@ -6,14 +6,18 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
-# Load API keys from environment variables
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-MEDIUM_API_KEY = os.getenv("MEDIUM_API_KEY", "")
-DEVTO_API_KEY = os.getenv("DEVTO_API_KEY", "")
+# PASTE YOUR REAL GEMINI KEY HERE
+GOOGLE_API_KEY = "AIzaSyCqgzWqxuF3XFsnSOrYROaeBsZgQm0aPiU"  
 
-if not GOOGLE_API_KEY:
-    print("ERROR: GOOGLE_API_KEY environment variable not set!")
-    print("Set it with: $env:GOOGLE_API_KEY='your_api_key_here'")
+# OPTIONAL: Publishing API keys (leave blank to skip auto-publish)
+MEDIUM_API_KEY = ""  # Get from: https://medium.com/me/settings/security
+DEVTO_API_KEY = ""   # Get from: https://dev.to/settings/extensions
+WORDPRESS_URL = ""   # Your WordPress site URL
+WORDPRESS_USER = ""
+WORDPRESS_APP_PASSWORD = ""  # Generate from WordPress.com settings
+
+if not GOOGLE_API_KEY or "your_real_key" in GOOGLE_API_KEY:
+    print("ERROR: Paste your real API key above!")
     exit()
 
 print("Gemini API Key LOADED SUCCESSFULLY!")
@@ -108,6 +112,41 @@ def publish_to_devto(title: str, content: str) -> bool:
         print(f"  ❌ Dev.to failed: {e}")
     return False
 
+def publish_to_wordpress(title: str, content: str) -> bool:
+    """Publish blog post to WordPress (requires 'markdown' package)"""
+    if not WORDPRESS_URL or not WORDPRESS_USER or not WORDPRESS_APP_PASSWORD:
+        return False
+    
+    try:
+        # Note: Install markdown package first: pip install markdown
+        try:
+            import markdown
+            html_content = markdown.markdown(content)
+        except ImportError:
+            print("  ⚠️  WordPress publishing requires 'markdown' package")
+            print("     Run: pip install markdown")
+            return False
+        
+        post_data = {
+            "title": title,
+            "content": html_content,
+            "status": "draft"  # Change to "publish" for immediate publish
+        }
+        
+        resp = requests.post(
+            f"{WORDPRESS_URL}/wp-json/wp/v2/posts",
+            auth=(WORDPRESS_USER, WORDPRESS_APP_PASSWORD),
+            json=post_data
+        )
+        
+        if resp.status_code == 201:
+            url = resp.json()["link"]
+            print(f"  ✅ WordPress: {url}")
+            return True
+    except Exception as e:
+        print(f"  ❌ WordPress failed: {e}")
+    return False
+
 def extract_title(content: str) -> str:
     """Extract title from markdown content"""
     lines = content.strip().split('\n')
@@ -158,6 +197,10 @@ def run():
         if DEVTO_API_KEY:
             if publish_to_devto(title, content):
                 published.append("Dev.to")
+        
+        if WORDPRESS_URL and WORDPRESS_USER and WORDPRESS_APP_PASSWORD:
+            if publish_to_wordpress(title, content):
+                published.append("WordPress")
         
         if not published:
             print("\n⚠️  No publishing platforms configured!")
